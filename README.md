@@ -244,7 +244,7 @@ module.exports = routes;
  // routes/users
 
 module.exports = (app) => {
-  app.get('/', (req, res) => { 
+  app.get('/users', (req, res) => { 
   
     res.statusCode = 200
     res.setHeader('Content-Type', 'application/json');
@@ -261,7 +261,7 @@ module.exports = (app) => {
     });
   
   })
-  app.get('/admin', (req, res) => { 
+  app.post('/users', (req, res) => { 
     
     res.statusCode = 200
     res.setHeader('Content-Type', 'application/json');
@@ -281,4 +281,76 @@ module.exports = routes;
 ~~~
 
 
+## Post
+Body-parser 
+`npm install body-parser --save` - Auxilia na forma de receber os dados.
 
+~~~Javascript
+// raiz index
+const bodyParser = require('body-parser');
+
+const app = express();
+app.use(bodyParser.urlencoded({ extended:false }));
+app.use(bodyParser.json());
+
+~~~
+
+~~~Javascript
+// raiz Routes/users
+ app.post('/users', (req, res) => { 
+    
+    res.json(req.body);
+  
+  })
+
+~~~
+
+## Banco de Dados
+`npm install nedb --save` é um banco de dados em js
+~~~Javascript
+// routes/users
+let NeDB = require('nedb');
+let db = new NeDB({
+    filename: 'users.bd',
+    autoload:true,
+})
+module.exports = (app) => {
+  
+  app.get('/users', (req, res) => { // Chamada da rota via GET padrão
+  
+    db.find({}).sort({name:-1}).exec((err, users) =>{  // retonar os dados do banco
+      if (err){
+        console.log(`Error: ${err}`);
+        res.status(400).json({
+          error: err
+        })
+      } else {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json({
+          users
+        });
+      }
+      
+    })
+
+  }) // GET
+
+
+  app.post('/users', (req, res) => { // Chamada da rota via post
+      
+    db.insert(req.body, (err, user) =>{ //inserindo os dados no bd
+      if (err){
+        console.log(`Error: ${err}`);
+        res.status(400).json({
+          error: err
+        })
+      } else {
+        res.status(200).json(user);
+      }
+
+    });
+  
+  }); // POST
+};
+~~~
