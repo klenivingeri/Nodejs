@@ -1,0 +1,206 @@
+# NodeJS - JavaScript no Back-End (No Lado do Servidor)
+ - Precisa do nodejs instalado na maquina.
+ 
+## Iniciando servidor
+`node index` - Depois de criar o arquivo index.js.
+~~~Javascript
+//index.js
+const http = require('http'); // 1 Carrega o modulo http
+
+http.createServer((req, res) => { // 2 Oque ela pode pedir(requisições), e oque ela pode receber (Respostas).
+  console.log('URL:', req.url); 
+  // retorna barra /
+  console.log('Method:', req.method); 
+  // retorna por padrão o method GET
+
+  res.end('OK') // responde a requisição.
+  // Se não houver retorno da requisição, vai ficar aguardando infinitamente.
+
+})
+
+server.listen(3000, '127.0.0.1', () => { 
+// a porta que voce quer subir 3000, e o IP.
+
+  console.log('Servidor rodando')
+  
+})
+
+~~~
+
+## Identificando camadas
+Utilizamos o switch para identificar as rotas.
+~~~Javascript
+
+const http = require('http');
+
+let server = http.createServer((req, res) => { 
+
+  console.log('URL:', req.url);
+  console.log('Method:', req.method);
+
+  switch (req.url) { // Passamos um retorno dependendo da rota chamada
+    case '/':
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'text/html');
+      res.end('<h1>Olá </h1>');
+      break;
+
+      case '/users':
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        users:[{
+          name:'Hcode',
+          email:'contato@hcide.com.br',
+          id: 1
+        },{
+          name:'Erick',
+          email:'kleniving@hcide.com.br',
+          id: 2
+        }]
+      }));
+      break;
+  
+    default:
+        res.statusCode = 400
+        res.setHeader('Content-Type', 'text/html');
+        res.end('<h1> Não é uma rota esperada</h1>');
+      break;
+  }
+
+})
+
+server.listen(3000, '127.0.0.1', () => {
+
+  console.log('Servidor rodando')
+
+})
+
+// http://localhost:3000/
+// Olá
+// http://localhost:3000/users
+// JSON
+// http://localhost:3000/rotaNaoEsperada
+// Não é uma rota esperada
+~~~
+
+## Iniciando Package.json
+ - `npm init` - Inicia o package.json. 
+Ele contem todas as informações necessarias para o projeto rodar.
+ - `npm install express --save` -  Instala o express como dependencia do projeto --save.
+ - `npm install nodemon -g` - Instala o nodemon apenas na sua maquina -g,
+ executamos o servidor com `nodemon index`.
+
+## Criando servidor com Express.
+Itilizamos o pacote para ajudar na criação do servidor.
+
+~~~Javascript
+const express = require('express');
+const app = express()
+
+app.get('/', (req, res) => { 
+
+  res.statusCode = 200
+  res.setHeader('Content-Type', 'text/html');
+  res.end('<h1>Olá </h1>');
+
+})
+
+app.get('/users', (req, res) => { 
+  
+  res.statusCode = 200
+  res.setHeader('Content-Type', 'application');
+  res.json({
+    users:[{
+      name:'Hcode',
+      email:'contato@hcide.com.br',
+      id: 1
+    },{
+      name:'Erick',
+      email:'kleniving@hcide.com.br',
+      id: 2
+    }]
+  });
+
+})
+
+app.listen(3000, '127.0.0.1', () => {
+
+  console.log('Servidor rodando')
+
+})
+
+
+~~~
+
+## Dividindo rotas em arquivos
+Não é uma boa pratica, deixar todo o codigo em apenas um arquivo, dessa forma vamos conseguir acessar os arquivos individualmente.
+
+ - Criar uma nova pasta /routes com o arquivo index e users
+
+
+~~~Javascript 
+ // routes/index
+const express = require('express');
+let routes = express.Router();
+
+routes.get('/', (req, res) => { 
+
+  res.statusCode = 200
+  res.setHeader('Content-Type', 'text/html');
+  res.end('<h1>Olá </h1>');
+
+})
+
+module.exports = routes;
+
+~~~
+~~~Javascript 
+ // routes/users
+let express = require('express');
+let routes =  express.Router();
+
+routes.get('/users', (req, res) => { 
+  
+  res.statusCode = 200
+  res.setHeader('Content-Type', 'application');
+  res.json({
+    users:[{
+      name:'Hcode',
+      email:'contato@hcide.com.br',
+      id: 1
+    },{
+      name:'Erick',
+      email:'kleniving@hcide.com.br',
+      id: 2
+    }]
+  });
+
+})
+
+module.exports = routes;
+
+~~~
+
+~~~javascript 
+// raiz index
+
+const express = require('express');
+let routesIndex = require('./routes/index');
+let routesUsers = require('./routes/users');
+
+const app = express();
+
+app.use(routesIndex);
+app.use(routesUsers);
+
+app.listen(3000, '127.0.0.1', () => {
+
+  console.log('Servidor rodando')
+
+})
+
+
+~~~
+
+
