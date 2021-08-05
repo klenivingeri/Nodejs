@@ -28,7 +28,7 @@ server.listen(3000, '127.0.0.1', () => {
 ~~~
 
 ## Identificando camadas
-Utilizamos o switch para identificar as rotas.
+ Coloquei o Switch mas pode ser qualquer outro condicional para identificar as rotas.
 ~~~Javascript
 
 const http = require('http');
@@ -109,7 +109,7 @@ app.get('/', (req, res) => {
 app.get('/users', (req, res) => { 
   
   res.statusCode = 200
-  res.setHeader('Content-Type', 'application');
+  res.setHeader('Content-Type', 'application/json');
   res.json({
     users:[{
       name:'Hcode',
@@ -163,7 +163,7 @@ let routes =  express.Router();
 routes.get('/users', (req, res) => { 
   
   res.statusCode = 200
-  res.setHeader('Content-Type', 'application');
+  res.setHeader('Content-Type', 'application/json');
   res.json({
     users:[{
       name:'Hcode',
@@ -200,7 +200,85 @@ app.listen(3000, '127.0.0.1', () => {
 
 })
 
+~~~
+
+## Consign
+`npm install consign --save` - Instala o consign como dependencia do projeto --save.
+Ajuda a fazer o gerenciamento das rotas.
+
+~~~javascript 
+// raiz index
+const express = require('express');
+const consign = require('consign');
+
+const app = express();
+consign().include('routes').into(app);
+//Consign vai incluir a pasta routes dentro do nosso app
+//Ele passar o app dentro do modules exportados nas rotas
+
+  app.listen(3000, '127.0.0.1', () => {
+    console.log('Servidor rodando')
+  });
+  
+~~~
+
+~~~Javascript 
+ // routes/index
+
+module.exports = (app) =>{
+
+  app.get('/', (req, res) => { 
+
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'text/html');
+    res.end('<h1>Olá </h1>');
+  
+  })
+
+}
+
+module.exports = routes;
 
 ~~~
+~~~Javascript 
+ // routes/users
+
+module.exports = (app) => {
+  app.get('/', (req, res) => { 
+  
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'application/json');
+    res.json({
+      users:[{
+        name:'Hcode',
+        email:'contato@hcide.com.br',
+        id: 1
+      },{
+        name:'Erick',
+        email:'kleniving@hcide.com.br',
+        id: 2
+      }]
+    });
+  
+  })
+  app.get('/admin', (req, res) => { 
+    
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'application/json');
+    res.json({
+      users:[{
+        name:'Erick',
+        email:'kleniving@hcide.com.br',
+        id: 2
+      }]
+    });
+  
+  })
+};
+
+module.exports = routes;
+
+~~~
+
 
 

@@ -1,11 +1,13 @@
 const express = require('express');
-let routesIndex = require('./routes/index');
-let routesUsers = require('./routes/users');
+const consign = require('consign');
+
 
 const app = express();
 
-app.use(routesIndex);
-app.use('/users',routesUsers);
+consign().include('routes').into(app);
+//Consign vai incluir a pasta routes dentro do nosso app
+//Ele passar o app dentro do modules exportados nas rotas
+
 
 app.listen(3000, '127.0.0.1', () => {
 
