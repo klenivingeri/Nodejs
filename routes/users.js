@@ -1,3 +1,5 @@
+const { check, validationResult } = require("express-validator");
+
 let NeDB = require('nedb');
 let db = new NeDB({
     filename: 'users.bd',
@@ -26,18 +28,28 @@ module.exports = (app) => {
   }) // GET
 
 
-  router.post((req, res) => { 
-    
-    db.insert(req.body, (err, user) =>{
-      if (err){
-        app.utils.error.send(err, req, res);
-      } else {
-        res.status(200).json(user);
+  router.post(
+    [
+      check("name", "O nome é obrigatório.").notEmpty(),
+      check("email", "Email inválido.").notEmpty().isEmail(),
+    ],
+    (req, res) => {
+      let errors = validationResult(req);
+ 
+      if (!errors.isEmpty()) {
+        app.utils.error.send(errors, req, res);
+        return false;
+      } else{ 
+        db.insert(req.body, (err, user) => {
+          if (err) {
+            app.utils.error.send(err, req, res);
+          } else {
+            res.status(200).json(user);
+          }
+        });
       }
-
-    });
-  
-  }); // POST
+  }
+  ); // POST
 
   let routerId = app.route('/users/:id');
 
@@ -53,7 +65,17 @@ module.exports = (app) => {
 
   });
 
-  routerId.put((req, res) =>{
+  routerId.put([
+    check("name", "O nome é obrigatório.").notEmpty(),
+    check("email", "Email inválido.").notEmpty().isEmail(),
+  ],
+  (req, res) => {
+    let errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      app.utils.error.send(errors, req, res);
+      return false;
+    }
 
     db.update({_id:req.params.id}, req.body, err =>{
       if (err){

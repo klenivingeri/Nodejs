@@ -3,7 +3,7 @@ module.exports ={
 
     console.log(`Error: ${err}`);
     res.status(code).json({
-      error: err
+      err
     });
 
   }

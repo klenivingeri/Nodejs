@@ -2,9 +2,13 @@ const express = require('express');
 const consign = require('consign');
 const bodyParser = require('body-parser');
 
+
 const app = express();
+
 app.use(bodyParser.urlencoded({ extended:false }));
 app.use(bodyParser.json()); // recebe o dados em json
+
+
 
 consign().include('routes').include('utils').into(app);
 //Consign vai incluir a pasta routes e utils dentro do nosso app

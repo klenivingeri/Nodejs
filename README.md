@@ -7,7 +7,8 @@
 //index.js
 const http = require('http'); // 1 Carrega o modulo http
 
-http.createServer((req, res) => { // 2 Oque ela pode pedir(requisições), e oque ela pode receber (Respostas).
+// 2 Oque ela pode pedir(requisições), e oque ela pode receber (Respostas).
+http.createServer((req, res) => { 
   console.log('URL:', req.url); 
   // retorna barra /
   console.log('Method:', req.method); 
@@ -358,7 +359,7 @@ Apartir de agora todas as requisições vão ser feitas utilizando o app do post
  ~~~
 
  - Solicitando informações do banco de dados
-
+#### GET - find
 ~~~Javascript
 module.exports = (app) => {
   
@@ -385,6 +386,7 @@ module.exports = (app) => {
 ~~~
 
  -  Inserindo informações no banco de dados.
+ #### POST - insert
 ~~~Javascript
   app.post('/users', (req, res) => { // Chamada da rota via post
       
@@ -504,6 +506,7 @@ module.exports = (app) => {
 ~~~
 
 ### Criando nova rota para recuperar um arquivo especifico
+#### GET - findOne
 ~~~Javascript
   // routes/users.js
   let routerId = app.route('/users/:id');
@@ -524,7 +527,7 @@ module.exports = (app) => {
 //http://localhost:3000/users/informar-id-aqui
 ~~~
 
-#### PUT
+#### PUT - update
 ~~~Javascript
   // routes/users
   routerId.put((req, res) =>{
@@ -542,7 +545,7 @@ module.exports = (app) => {
 
 ~~~
 
-#### DELETE
+#### DELETE - remove
 ~~~javascript
 // routes/users.js
   routerId.delete((req, res)=>{
@@ -557,3 +560,56 @@ module.exports = (app) => {
 
   })
 ~~~
+
+## Express-validator
+`npm install express-validator --save` - Auxilia na validação de dados.
+
+~~~Javascript
+ // raiz
+ const express = require('express');
+const consign = require('consign');
+const bodyParser = require('body-parser');
+const expressValidator = require('express-validator') // recebemos 
+
+const app = express();
+
+app.use(bodyParser.urlencoded({ extended:false }));
+app.use(bodyParser.json()); 
+app.use(expressValidator()) // inclui-mos no app
+
+consign().include('routes').include('utils').into(app);
+
+
+app.listen(3000, '127.0.0.1', () => {
+
+  console.log('Servidor rodando')
+
+})
+~~~
+
+Um dos method que ele incluir é o check() e validationResult() dentro do req;
+~~~Javascript
+    router.post(
+      [
+        check("name", "O nome é obrigatório.").notEmpty(),
+        check("email", "Email inválido.").notEmpty().isEmail(),
+        check("senha", "A senha é obrigatória.").notEmpty(),
+      ],
+      (req, res) => {
+        let errors = validationResult(req);
+   
+        if (!errors.isEmpty()) { // retorna array ou null
+          app.utils.error.send(errors, req, res);
+          return false;
+        }
+   
+        db.insert(req.body, (err, user) => {
+          if (err) {
+            app.utils.error.send(err, req, res);
+          } else {
+            res.status(200).json(user);
+          }
+        });
+      }
+    ); // POST
+
