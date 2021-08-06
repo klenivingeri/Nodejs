@@ -102,7 +102,8 @@ Não preciamos mais do switch, e podemos configurar as rotas por requisições  
  - PUT : O método PUT substitui todas as atuais representações do recurso de destino pela carga de dados da requisição.
  - DELETE : O método DELETE remove um recurso específico.
 
- Existem outros metodos que podem ser visto [aqui]('https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods')
+ Existem outros metodos que podem ser visto [aqui](
+ https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods)
 
 ~~~Javascript
 const express = require('express');
@@ -213,7 +214,7 @@ app.listen(3000, '127.0.0.1', () => {
 
 ## Consign
 `npm install consign --save` - Instala o consign como dependencia do projeto --save.
-Ajuda a fazer o gerenciamento das rotas.
+ Ajudar a incluir arquivos no nosso app
 
 Vamos melhorar ainda mais o codigo acima usando o consign.
 
@@ -240,7 +241,8 @@ consign().include('routes').into(app);
 Em vez de exportar o modulo apenas, vamos passar uma função pra ele que recebe o app, dessa forma conseguimos ter acesso total as nossas rotas.
 ~~~Javascript 
  // routes/index
-module.exports = (app) =>{
+
+module.exports = (app) =>{ //recebe o app
   app.get('/', (req, res) => { 
 
     res.statusCode = 200
@@ -295,19 +297,21 @@ module.exports = routes;
 
 ## Post
 #### Body-parser 
-`npm install body-parser --save` - Transforma os dados recebidos para json.
+`npm install body-parser --save` - Adiciona como dependencia do projeto -save.
+Body-parse vai nos auxilixar a transformar nossos dados de req.body em json.
+ -  Vamos passar para dentro do nosso app o bodyParse
 
 ~~~Javascript
 // raiz index
 const express = require('express');
 const consign = require('consign');
-const bodyParser = require('body-parser'); // aqui
+const bodyParser = require('body-parser'); // recebemos aqui
 
 const app = express();
 
 // passando para app
-app.use(bodyParser.urlencoded({ extended:false })); 
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended:false })); // passando para o app
+app.use(bodyParser.json()); // passando para o app
 
 consign().include('routes').include('utils').into(app);
 //Consign vai incluir a pasta routes e utils dentro do nosso app
@@ -341,15 +345,21 @@ Vamos Alterar nossa rota users/admin para /users trocando o method para POST.
 ## Banco de Dados
 `npm install nedb --save` é um banco de dados leve e simples de se trabalhar.
 
-Apartir de agora todas as requisições seram feitas utilizando o app do postman e não mais o navegador.
+Apartir de agora todas as requisições vão ser feitas utilizando o app do postman e não mais o navegador.
 
-~~~Javascript
-// routes/users
-let NeDB = require('nedb');
-let db = new NeDB({
+ - Vamos criar nosso banco
+ ~~~Javascript 
+  // routes/users
+  let NeDB = require('nedb');
+  let db = new NeDB({
     filename: 'users.bd',
     autoload:true,
 })
+ ~~~
+
+ - Solicitando informações do banco de dados
+
+~~~Javascript
 module.exports = (app) => {
   
   app.get('/users', (req, res) => { // Chamada da rota via GET , padrão
@@ -372,7 +382,10 @@ module.exports = (app) => {
     })
 
   }) // GET
+~~~
 
+ -  Inserindo informações no banco de dados.
+~~~Javascript
   app.post('/users', (req, res) => { // Chamada da rota via post
       
     db.insert(req.body, (err, user) =>{ //inserindo os dados no bd
@@ -408,10 +421,11 @@ module.exports ={
   }
 };
 ~~~
- - Utilizar o consign para incluir dentro de app.
+
+ - Utilizar o consign novamente para incluir dentro do nosso app a pasta utils.
 ~~~Javascript
 // raiz index
-//consign().include('routes').into(app);
+//de consign().include('routes').into(app); para
 consign().include('routes').include('utils').into(app);
 //Consign vai incluir a pasta routes e utils dentro do nosso app
 ~~~
@@ -423,7 +437,7 @@ module.exports = (app) => {
   
     db.find({}).sort({name:-1}).exec((err, users) =>{
 
-      if (err){// Vamos alterar nosso codigo de erro para
+      if (err){// Vamos alterar nosso codigo de erro para o method send que criamos
         app.utils.error.send(err, req, res);
       } else {
         res.statusCode = 200;
@@ -452,7 +466,7 @@ let db = new NeDB({
 module.exports = (app) => {
 
   //Variavel que recebe nossas rota
-  let router = app.router('/users');
+  let router = app.route('/users');
 
 // de app.get('/users', (req, res) => {  para 
   router.get((req, res) => { 
@@ -487,4 +501,59 @@ module.exports = (app) => {
   
   }); // POST
 };
+~~~
+
+### Criando nova rota para recuperar um arquivo especifico
+~~~Javascript
+  // routes/users.js
+  let routerId = app.route('/users/:id');
+
+  routerId.get((req, res) => {
+
+    db.findOne({_id:req.params.id}).exec((err, user) =>{
+      if(err){
+        app.utils.error.send(err, req, res);
+      } else{
+         res.status(200).json(user);
+      }
+    });
+
+  });
+};
+//Exemplo de como chamar a rota
+//http://localhost:3000/users/informar-id-aqui
+~~~
+
+#### PUT
+~~~Javascript
+  // routes/users
+  routerId.put((req, res) =>{
+
+    db.update({_id:req.params.id}, req.body, err =>{
+
+      if (err){
+        app.utils.error.send(err, req, res);
+      } else{
+        res.status(200).json(Object.assign(req.params, req.body));
+      }
+    })
+
+  })
+
+~~~
+
+#### DELETE
+~~~javascript
+// routes/users.js
+  routerId.delete((req, res)=>{
+
+    db.remove({_id: req.params.id}, {}, err =>{
+      if(err){
+        app.utils.error.send(err, req, res);
+      }else{
+        res.status(200).json(req.params)
+      }
+    })
+
+  })
 ~~~
