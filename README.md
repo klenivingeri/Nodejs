@@ -86,18 +86,29 @@ server.listen(3000, '127.0.0.1', () => {
 
 ## Iniciando Package.json
  - `npm init` - Inicia o package.json. 
-Ele contem todas as informações necessarias para o projeto rodar.
- - `npm install express --save` -  Instala o express como dependencia do projeto --save.
+ - Package contem todas as informações necessarias para o projeto rodar.
+ - `npm install express --save` - Instala o express como dependencia do projeto --save.
  - `npm install nodemon -g` - Instala o nodemon apenas na sua maquina -g,
- executamos o servidor com `nodemon index`.
+ - executamos o servidor com `nodemon index`.
 
 ## Criando servidor com Express.
-Itilizamos o pacote para ajudar na criação do servidor.
+Utilizamos o pacote express para ajudar na criação do servidor.
+Para configurar um servidor do zero, precisamos acertar varios detalhes,
+mas o express já vem com tudo  configurado.
+
+Não preciamos mais do switch, e podemos configurar as rotas por requisições  apartir do app.
+ - GET : O método GET solicita a representação de um recurso específico. Requisições utilizando o método GET devem retornar apenas dados.
+ - POST : O método POST é utilizado para submeter uma entidade a um recurso específico, frequentemente causando uma mudança no estado do recurso ou efeitos colaterais no servidor.
+ - PUT : O método PUT substitui todas as atuais representações do recurso de destino pela carga de dados da requisição.
+ - DELETE : O método DELETE remove um recurso específico.
+
+ Existem outros metodos que podem ser visto [aqui]('https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods')
 
 ~~~Javascript
 const express = require('express');
 const app = express()
 
+// Não preciamos mais do Switch, agora vamos usar app.get, app.post...
 app.get('/', (req, res) => { 
 
   res.statusCode = 200
@@ -129,22 +140,19 @@ app.listen(3000, '127.0.0.1', () => {
   console.log('Servidor rodando')
 
 })
-
-
 ~~~
 
 ## Dividindo rotas em arquivos
-Não é uma boa pratica, deixar todo o codigo em apenas um arquivo, dessa forma vamos conseguir acessar os arquivos individualmente.
+Não é uma boa pratica deixar todo o codigo em apenas um arquivo, nossa aplicação pode evoluindo e deixando dificil o entendimento com tudo no mesmo lugar.
+Uma boa pratica é fracionar nosso codigo, vamos criar modulos que vão trabalhar separadamente.
 
- - Criar uma nova pasta /routes com o arquivo index e users
-
-
+ - Criar uma nova pasta /routes com o arquivo index.js e users.js
 ~~~Javascript 
  // routes/index
 const express = require('express');
-let routes = express.Router();
+let routes = express.Router(); // Chamamos as rotas
 
-routes.get('/', (req, res) => { 
+routes.get('/', (req, res) => {  // passamos a rota /
 
   res.statusCode = 200
   res.setHeader('Content-Type', 'text/html');
@@ -153,14 +161,14 @@ routes.get('/', (req, res) => {
 })
 
 module.exports = routes;
-
 ~~~
+
 ~~~Javascript 
  // routes/users
 let express = require('express');
-let routes =  express.Router();
+let routes =  express.Router(); // Chamamos as rotas
 
-routes.get('/users', (req, res) => { 
+routes.get('/users', (req, res) => {  // passamos a rota /users
   
   res.statusCode = 200
   res.setHeader('Content-Type', 'application/json');
@@ -179,20 +187,21 @@ routes.get('/users', (req, res) => {
 })
 
 module.exports = routes;
-
 ~~~
 
+Depois do arquivos criados vamos inclui-los no nosso index.
 ~~~javascript 
 // raiz index
 
 const express = require('express');
-let routesIndex = require('./routes/index');
-let routesUsers = require('./routes/users');
+let routesIndex = require('./routes/index'); // aqui
+let routesUsers = require('./routes/users'); // aqui
 
 const app = express();
 
-app.use(routesIndex);
-app.use(routesUsers);
+// E passar aqui para nosso app
+app.use(routesIndex); 
+app.use(routesUsers); 
 
 app.listen(3000, '127.0.0.1', () => {
 
@@ -206,6 +215,8 @@ app.listen(3000, '127.0.0.1', () => {
 `npm install consign --save` - Instala o consign como dependencia do projeto --save.
 Ajuda a fazer o gerenciamento das rotas.
 
+Vamos melhorar ainda mais o codigo acima usando o consign.
+
 ~~~javascript 
 // raiz index
 const express = require('express');
@@ -214,19 +225,22 @@ const consign = require('consign');
 const app = express();
 consign().include('routes').into(app);
 //Consign vai incluir a pasta routes dentro do nosso app
-//Ele passar o app dentro do modules exportados nas rotas
+//Vamos conseguir acessar nossas rotas atraves do app em outros arquivos.
 
   app.listen(3000, '127.0.0.1', () => {
     console.log('Servidor rodando')
   });
+
+// http://localhost:3000
+// http://localhost:3000/users/
+
   
 ~~~
 
+Em vez de exportar o modulo apenas, vamos passar uma função pra ele que recebe o app, dessa forma conseguimos ter acesso total as nossas rotas.
 ~~~Javascript 
  // routes/index
-
 module.exports = (app) =>{
-
   app.get('/', (req, res) => { 
 
     res.statusCode = 200
@@ -238,14 +252,13 @@ module.exports = (app) =>{
 }
 
 module.exports = routes;
-
 ~~~
+Vamos criar uma nova rota dentro de users.js, a /users/admin, que futuramente será uma rota com requisição POST.
 ~~~Javascript 
  // routes/users
-
 module.exports = (app) => {
   app.get('/users', (req, res) => { 
-  
+
     res.statusCode = 200
     res.setHeader('Content-Type', 'application/json');
     res.json({
@@ -261,7 +274,8 @@ module.exports = (app) => {
     });
   
   })
-  app.post('/users', (req, res) => { 
+  // nova rota adicionada
+  app.get('/users/admin', (req, res) => { 
     
     res.statusCode = 200
     res.setHeader('Content-Type', 'application/json');
@@ -277,36 +291,58 @@ module.exports = (app) => {
 };
 
 module.exports = routes;
-
 ~~~
 
-
 ## Post
-Body-parser 
-`npm install body-parser --save` - Auxilia na forma de receber os dados.
+#### Body-parser 
+`npm install body-parser --save` - Transforma os dados recebidos para json.
 
 ~~~Javascript
 // raiz index
-const bodyParser = require('body-parser');
+const express = require('express');
+const consign = require('consign');
+const bodyParser = require('body-parser'); // aqui
 
 const app = express();
-app.use(bodyParser.urlencoded({ extended:false }));
+
+// passando para app
+app.use(bodyParser.urlencoded({ extended:false })); 
 app.use(bodyParser.json());
+
+consign().include('routes').include('utils').into(app);
+//Consign vai incluir a pasta routes e utils dentro do nosso app
+//Ele passa o app dentro do modules exportados nas rotas
+
+app.listen(3000, '127.0.0.1', () => {
+
+  console.log('Servidor rodando')
+
+})
 
 ~~~
 
+Vamos Alterar nossa rota users/admin para /users trocando o method para POST.
+
 ~~~Javascript
-// raiz Routes/users
+// Routes/users
+
+//app.get('/users/admin', (req, res) => { 
  app.post('/users', (req, res) => { 
     
     res.json(req.body);
   
   })
 
+// vamos ter duas rotas, com o mesmo nome, porem com solicitações diferentes, uma get e outra post
 ~~~
 
+
+
 ## Banco de Dados
-`npm install nedb --save` é um banco de dados em js
+`npm install nedb --save` é um banco de dados leve e simples de se trabalhar.
+
+Apartir de agora todas as requisições seram feitas utilizando o app do postman e não mais o navegador.
+
 ~~~Javascript
 // routes/users
 let NeDB = require('nedb');
@@ -316,9 +352,10 @@ let db = new NeDB({
 })
 module.exports = (app) => {
   
-  app.get('/users', (req, res) => { // Chamada da rota via GET padrão
+  app.get('/users', (req, res) => { // Chamada da rota via GET , padrão
   
     db.find({}).sort({name:-1}).exec((err, users) =>{  // retonar os dados do banco
+    //find: passamos quem queremos buscar, sort:a forma que é listado.
       if (err){
         console.log(`Error: ${err}`);
         res.status(400).json({
@@ -336,7 +373,6 @@ module.exports = (app) => {
 
   }) // GET
 
-
   app.post('/users', (req, res) => { // Chamada da rota via post
       
     db.insert(req.body, (err, user) =>{ //inserindo os dados no bd
@@ -345,6 +381,104 @@ module.exports = (app) => {
         res.status(400).json({
           error: err
         })
+      } else {
+        res.status(200).json(user);
+      }
+
+    });
+  
+  }); // POST
+};
+~~~
+
+## Refatorando
+Nas nossas rotas temos a informação de erro sendo repetida varias vezes.
+ - Criar uma pasta utils/error.js
+ - Exportar como modulo.
+
+~~~Javascript 
+ // utils/error.js
+module.exports ={
+  send: (err, req, res, code = 400) => {
+    console.log(`Error: ${err}`);
+    res.status(400).json({
+      error: err
+    });
+
+  }
+};
+~~~
+ - Utilizar o consign para incluir dentro de app.
+~~~Javascript
+// raiz index
+//consign().include('routes').into(app);
+consign().include('routes').include('utils').into(app);
+//Consign vai incluir a pasta routes e utils dentro do nosso app
+~~~
+
+~~~Javascript
+// routes/user
+module.exports = (app) => {
+  app.get('/users', (req, res) => { 
+  
+    db.find({}).sort({name:-1}).exec((err, users) =>{
+
+      if (err){// Vamos alterar nosso codigo de erro para
+        app.utils.error.send(err, req, res);
+      } else {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json({
+          users
+        });
+      }
+      
+    })
+
+  }) // GET
+~~~
+
+### Melhorando ainda mais nossas rotas
+
+ - Vamos criar uma variavel para armazenar nossa rota e diminuir ainda mais nosso codigo
+
+Atualmente estamos com o arquivo users.js dessa forma
+~~~Javascript
+/let NeDB = require('nedb');
+let db = new NeDB({
+    filename: 'users.bd',
+    autoload:true,
+})
+module.exports = (app) => {
+
+  //Variavel que recebe nossas rota
+  let router = app.router('/users');
+
+// de app.get('/users', (req, res) => {  para 
+  router.get((req, res) => { 
+  
+    db.find({}).sort({name:-1}).exec((err, users) =>{
+    //find: passamos quem queremos buscar, sort:a forma que é listado.
+      if (err){
+       app.utils.error.send(err, req, res);
+      } else {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json({
+          users
+        });
+      }
+      
+    })
+
+  }) // GET
+
+// de app.post('/users', (req, res) => {  para 
+  router.post((req, res) => { 
+    
+    db.insert(req.body, (err, user) =>{ // armazena nosso codigo no bd
+      if (err){
+        app.utils.error.send(err, req, res);
       } else {
         res.status(200).json(user);
       }
