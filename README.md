@@ -1,5 +1,12 @@
-# NodeJS - JavaScript no Back-End (No Lado do Servidor)
- - Precisa do nodejs instalado na maquina.
+# NodeJS 
+### - JavaScript no Back-End, Routes e Banco de dados.
+Precisa do nodejs instalado e saber usar npm para instalação de pacotes
+- Express
+- Consign
+- Body-parser
+- Express-Validador
+- Nedb
+- Postman
  
 ## Iniciando servidor
 `node index` - Depois de criar o arquivo index.js.
@@ -566,16 +573,16 @@ module.exports = (app) => {
 
 ~~~Javascript
  // raiz
- const express = require('express');
+const express = require('express');
 const consign = require('consign');
 const bodyParser = require('body-parser');
-const expressValidator = require('express-validator') // recebemos 
+
 
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended:false }));
 app.use(bodyParser.json()); 
-app.use(expressValidator()) // inclui-mos no app
+
 
 consign().include('routes').include('utils').into(app);
 
